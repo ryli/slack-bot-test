@@ -28,26 +28,34 @@ router.post('/', (ctx, next) => {
 
   if (payload.type === "url_verification") {
     responseText = `challenge=${payload.challenge}`
-  } else if (payload.event.type === "app_mention") {
-    if (payload.event.text.includes("tell me a joke")) {
-      // Make call to chat.postMessage using bot's token
-      postMsg('joke')
-    }
-  } else if (payload.event.type === "message") {
-    if (payload.event.text.includes("Who's there?")) {
-      responseText = "A bot user";
-    } else if (payload.event.text.includes("Bot user who?")) {
-      responseText = "No, I'm a bot user. I don't understand jokes.";
-    }
+  }
 
-    if (responseText !== undefined) {
-      // Make call to chat.postMessage sending response_text using bot's token
-      postMsg(responseText)
-    }
+  if (payload.event) {
+	  if (payload.event.type === "app_mention") {
+	    if (payload.event.text.includes("tell me a joke")) {
+	      // Make call to chat.postMessage using bot's token
+	      responseText = joke
+	      postMsg(responseText)
+	    }
+	  } else if (payload.event.type === "message") {
+	    if (payload.event.text.includes("123")) {
+	      responseText = "A bot user";
+	    } else if (payload.event.text.includes("Bot user who?")) {
+	      responseText = "No, I'm a bot user. I don't understand jokes.";
+	    }
+	console.log(responseText, payload)
+	    if (responseText !== undefined) {
+	      // Make call to chat.postMessage sending response_text using bot's token
+	      postMsg(responseText)
+	    }
+	  }
+  
+  } else if (payload.response_url) {
+    responseCommand(payload.response_url)
   }
 
   // ctx.response.type = 'json'
-  ctx.body = responseText
+  ctx.body = responseText || ''
   next()
 })
 
@@ -57,12 +65,31 @@ app
 
 app.listen(3000)
 
-function postMsg(msg, opt) {
-  request.post(`https://slack.com/api/chat.postMessage`, {
-	  headers : { Authorization: 'Bearer xoxp-492044269362-491875545588-500459323636-c6ab8fe331c1279b34f99e8a7997057a'},
+function postMsg(msg) {
+  console.log('post ', msg)
+  const token = 'xoxp-492044269362-491875545588-502088043334-2ee05825b6e12bfc05dbb5ecaf173c05'
+  request.post('https://slack.com/api/chat.postMessage', {
+    headers : { Authorization: `Bearer ${token}` },
     formData: {
       text: msg,
       channel: 'eshop' 
     }
+  }, function(err, res, body) {
+     console.log(err, body)
   })
+}
+
+function responseCommand(url){
+  const opt = {
+    body: {
+      text: 'now xx',
+      attachments: [{ text: 'xxx' }]
+    },
+    json: true,
+  }
+  
+  request.post(url, opt, function(err, res, body){
+    console.log(err, body)
+  })
+
 }
